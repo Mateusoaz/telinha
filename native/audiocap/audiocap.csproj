@@ -10,6 +10,9 @@
     <RootNamespace>AudioCap</RootNamespace>
     <Nullable>disable</Nullable>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- Sem isso o .exe grava o caminho da pasta onde foi compilado (com o usuário do Windows). -->
+    <DebugType>none</DebugType>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
 
 </Project>
