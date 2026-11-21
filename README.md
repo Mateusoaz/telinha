@@ -56,7 +56,7 @@ npm start
 | `npm run test:glitch` | troca a fonte ao vivo, muda a resolução, cobre a janela e mede tela preta e congelamentos |
 | `npm run dist` | gera o instalador e o portátil em `release/<versão>/`, sem publicar |
 | `npm run test:update` | gera uma versão falsa mais nova, serve por um servidor local e confere se o app baixa e oferece a atualização |
-| `npm run release -- -Version 1.2.3` | muda a versão, faz commit e tag, envia pro GitHub e publica o instalador. Quem tem o Telinha instalado recebe o aviso de atualização |
+| `npm run release -- -Version 1.2.3` | muda a versão, faz commit e tag, envia pro GitHub e publica o instalador. Quem tem o Telinha instalado recebe o aviso de atualização. Precisa estar logado no GitHub CLI (`gh auth login`) |
 
 ### Organização
 
