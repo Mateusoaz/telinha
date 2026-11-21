@@ -1,0 +1,84 @@
+{
+  "name": "telinha",
+  "version": "1.2.0",
+  "description": "Compartilhamento de tela entre amigos (Radmin VPN / LAN)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:audio": "dotnet build native/audiocap -c Release -o resources/bin",
+    "test": "npm run test:server && npm run test:audio && npm run test:e2e",
+    "test:server": "node test/server.test.js",
+    "test:audio": "node test/audio-capture.test.js",
+    "test:e2e": "powershell -NoProfile -ExecutionPolicy Bypass -File test/e2e.ps1",
+    "dist": "npm run build:audio && electron-builder --win nsis portable --publish never",
+    "test:glitch": "powershell -NoProfile -ExecutionPolicy Bypass -File test/glitch.ps1",
+    "release": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release.ps1",
+    "test:update": "powershell -NoProfile -ExecutionPolicy Bypass -File test/update.ps1"
+  },
+  "author": "Telinha",
+  "license": "ISC",
+  "dependencies": {
+    "electron-updater": "^6.8.11",
+    "ws": "^8.23.0"
+  },
+  "devDependencies": {
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0"
+  },
+  "private": true,
+  "build": {
+    "appId": "com.telinha.app",
+    "productName": "Telinha",
+    "copyright": "Feito pros amigos",
+    "directories": {
+      "output": "release/${version}",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "main-process/**",
+      "server/**",
+      "shared/**",
+      "renderer/**",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/bin",
+        "to": "bin",
+        "filter": [
+          "audiocap.exe",
+          "audiocap.exe.config"
+        ]
+      }
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": true
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "shortcutName": "Telinha",
+      "artifactName": "Telinha-Instalador-${version}.exe"
+    },
+    "portable": {
+      "artifactName": "Telinha-Portatil-${version}.exe"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Mateusoaz",
+        "repo": "telinha",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "homepage": "https://github.com/Mateusoaz/telinha",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mateusoaz/telinha.git"
+  }
+}

@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Telinha</title>
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: mediastream:; connect-src 'self' ws: wss:; worker-src 'self' blob:">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="update-banner" class="update-banner hidden"></div>
+
+  <div id="lobby-screen" class="screen">
+    <div class="lobby-content">
+      <header class="brand">
+        <div class="brand-logo"><img src="icon.png" alt=""></div>
+        <div>
+          <h1>Telinha</h1>
+          <p>Compartilhamento de tela entre amigos <span id="app-version" class="app-version"></span></p>
+        </div>
+      </header>
+
+      <section class="card my-info-card">
+        <label class="field">
+          <span>Seu nome</span>
+          <input id="my-name-input" maxlength="32" placeholder="Como os amigos vão te ver">
+        </label>
+        <div class="network-status">
+          <div id="radmin-status" class="status-line"></div>
+          <div id="firewall-status" class="status-line"></div>
+          <label class="status-line preference-toggle">
+            <input id="hardware-decoding-checkbox" type="checkbox">
+            <span>Decodificar vídeo pela placa de vídeo <small>(desligue se aparecer tela preta ao assistir)</small></span>
+          </label>
+        </div>
+      </section>
+
+      <div class="lobby-columns">
+        <section class="card">
+          <h2>Salas na rede</h2>
+          <div id="discovered-rooms" class="room-list"></div>
+          <div class="divider"><span>ou entre pelo IP</span></div>
+          <div class="input-row">
+            <input id="join-address-input" placeholder="IP do host (ex.: 26.12.34.56)">
+            <input id="join-port-input" class="port-input" value="47800" title="Porta">
+          </div>
+          <div class="input-row">
+            <input id="join-password-input" type="password" placeholder="Senha (se a sala tiver)">
+            <button id="join-button" class="button">Entrar</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Criar sala</h2>
+          <label class="field"><span>Nome da sala</span><input id="new-room-name-input" maxlength="40" placeholder="Sala do pessoal"></label>
+          <label class="field"><span>Senha <small>(opcional)</small></span><input id="new-room-password-input" type="password" maxlength="40"></label>
+          <label class="field"><span>Porta</span><input id="new-room-port-input" value="47800"></label>
+          <button id="create-room-button" class="button primary wide">Criar sala</button>
+          <p class="hint">Quem cria a sala vira o host. A sala fica aberta enquanto o seu Telinha estiver aberto.</p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="room-screen" class="screen hidden">
+    <aside class="sidebar">
+      <div class="room-header">
+        <div id="room-title" class="room-title"></div>
+        <div id="room-subtitle" class="room-subtitle"></div>
+      </div>
+      <div class="section-label">Na sala — <span id="participant-count">0</span></div>
+      <ul id="participant-list" class="participant-list"></ul>
+      <div id="broadcast-panel" class="broadcast-panel"></div>
+      <div class="my-status-bar">
+        <div id="my-avatar"></div>
+        <div class="my-status-info">
+          <div id="my-name-label" class="my-name-label"></div>
+          <div id="my-status" class="my-status"></div>
+        </div>
+        <button id="leave-room-button" class="icon-button danger" title="Sair da sala">Sair</button>
+      </div>
+    </aside>
+
+    <main class="stage">
+      <div id="live-strip" class="live-strip"></div>
+      <div id="stage-grid" class="stage-grid"></div>
+      <div id="stage-placeholder" class="stage-placeholder">
+        <div class="placeholder-icon">📺</div>
+        <h3>Ninguém ao vivo ainda</h3>
+        <p></p>
+      </div>
+    </main>
+  </div>
+
+  <div id="share-dialog" class="dialog-backdrop hidden">
+    <div class="dialog">
+      <div class="dialog-header">
+        <h2 id="share-dialog-title">Compartilhar tela</h2>
+        <button id="close-share-dialog-button" class="icon-button" title="Fechar">✕</button>
+      </div>
+
+      <div class="source-picker">
+        <div class="source-tabs">
+          <button class="source-tab active" data-tab="screen">Telas</button>
+          <button class="source-tab" data-tab="window">Janelas</button>
+          <div class="spacer"></div>
+          <button id="refresh-sources-button" class="icon-button" title="Atualizar lista">↻ Atualizar</button>
+        </div>
+        <div id="source-grid" class="source-grid"></div>
+      </div>
+
+      <div class="share-options">
+        <div class="share-option">
+          <span class="share-option-label">Resolução</span>
+          <div id="resolution-options" class="segmented">
+            <button data-value="480">480p</button><button data-value="720">720p</button><button data-value="1080">1080p</button><button data-value="native">Original</button>
+          </div>
+        </div>
+        <div class="share-option">
+          <span class="share-option-label">Quadros por segundo <small>(máx. 30)</small></span>
+          <div id="fps-options" class="segmented">
+            <button data-value="15">15</button><button data-value="20">20</button><button data-value="30">30</button>
+          </div>
+        </div>
+        <div class="share-option">
+          <span class="share-option-label">Bitrate</span>
+          <div class="slider-row"><input id="bitrate-slider" type="range" min="1" max="20" step="0.5"><b id="bitrate-value"></b></div>
+        </div>
+        <div class="share-option">
+          <span class="share-option-label">Prioridade</span>
+          <div id="priority-options" class="segmented">
+            <button data-value="motion">🎮 Fluidez (jogo, vídeo)</button><button data-value="detail">🔍 Nitidez (texto, meme parado)</button>
+          </div>
+        </div>
+        <label class="audio-option">
+          <input id="share-audio-checkbox" type="checkbox">
+          <span><b>Compartilhar áudio</b><small id="share-audio-hint"></small></span>
+        </label>
+        <label id="exclude-discord-option" class="audio-option">
+          <input id="exclude-discord-checkbox" type="checkbox">
+          <span><b>Ignorar o som do Discord</b><small>A voz da call não vai junto pra transmissão.</small></span>
+        </label>
+        <details class="advanced-options">
+          <summary>Avançado</summary>
+          <div class="advanced-options-grid">
+            <label class="field"><span>Codec</span>
+              <select id="codec-select">
+                <option value="auto">Automático (H.264)</option>
+                <option value="h264">H.264</option>
+                <option value="vp8">VP8</option>
+                <option value="vp9">VP9</option>
+                <option value="av1">AV1</option>
+              </select>
+            </label>
+            <label class="field"><span>Upload máximo total (Mbps, 0 = sem limite)</span>
+              <input id="upload-limit-input" type="number" min="0" max="1000" step="1">
+            </label>
+          </div>
+          <p class="hint">Com várias pessoas assistindo, o bitrate de cada uma é dividido pra caber no seu upload. Ex.: 30 Mbps e 5 pessoas = 6 Mbps pra cada.</p>
+        </details>
+      </div>
+
+      <div class="dialog-footer">
+        <button id="cancel-share-button" class="button">Cancelar</button>
+        <button id="confirm-share-button" class="button live" disabled>🔴 Ao vivo</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toasts"></div>
+
+  <script src="ui-helpers.js"></script>
+  <script src="video-settings.js"></script>
+  <script src="webrtc-tuning.js"></script>
+  <script src="captured-audio-track.js"></script>
+  <script src="room-connection.js"></script>
+  <script src="screen-broadcast.js"></script>
+  <script src="stream-viewer.js"></script>
+  <script src="app-state.js"></script>
+  <script src="lobby.js"></script>
+  <script src="room-screen.js"></script>
+  <script src="broadcast-panel.js"></script>
+  <script src="share-dialog.js"></script>
+  <script src="stream-tiles.js"></script>
+  <script src="app-updates.js"></script>
+  <script src="autotest.js"></script>
+  <script src="autotest-glitch.js"></script>
+  <script src="startup.js"></script>
+</body>
+</html>

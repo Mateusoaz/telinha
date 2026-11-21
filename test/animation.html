@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { margin: 0; background: #000; overflow: hidden; }
+    canvas { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    const animationKind = new URLSearchParams(location.search).get('kind') || 'game';
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = animationKind === 'noise' ? 480 : 1600;
+    canvas.height = animationKind === 'noise' ? 270 : 900;
+    const width = canvas.width;
+    const height = canvas.height;
+    let frameNumber = 0;
+
+    const noiseImage = context.createImageData(width, height);
+    const noisePixels = new Uint32Array(noiseImage.data.buffer);
+
+    function drawNoise() {
+      for (let index = 0; index < noisePixels.length; index += 1) {
+        noisePixels[index] = (Math.random() * 0xffffff) | 0xff000000;
+      }
+      context.putImageData(noiseImage, 0, 0);
+    }
+
+    const balls = Array.from({ length: 160 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      speedX: (Math.random() - 0.5) * 14,
+      speedY: (Math.random() - 0.5) * 14,
+      radius: 6 + Math.random() * 40,
+      hue: Math.random() * 360,
+    }));
+
+    function drawGameLikeScene() {
+      const background = context.createLinearGradient(0, 0, width, height);
+      background.addColorStop(0, `hsl(${frameNumber % 360} 70% 35%)`);
+      background.addColorStop(1, `hsl(${(frameNumber * 1.7 + 180) % 360} 70% 20%)`);
+      context.fillStyle = background;
+      context.fillRect(0, 0, width, height);
+
+      for (let stripe = 0; stripe < 40; stripe += 1) {
+        context.fillStyle = `hsla(${(stripe * 9 + frameNumber) % 360}, 80%, 60%, 0.25)`;
+        context.fillRect(((stripe * 97 + frameNumber * 6) % (width + 200)) - 200, (stripe * 53) % height, 180, 30);
+      }
+
+      for (const ball of balls) {
+        ball.x += ball.speedX;
+        ball.y += ball.speedY;
+        if (ball.x < 0 || ball.x > width) ball.speedX *= -1;
+        if (ball.y < 0 || ball.y > height) ball.speedY *= -1;
+        context.fillStyle = `hsl(${(ball.hue + frameNumber) % 360} 85% 55%)`;
+        context.beginPath();
+        context.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        context.fill();
+      }
+
+      context.fillStyle = '#fff';
+      context.font = 'bold 64px Segoe UI';
+      context.fillText(`TESTE TELINHA  ${frameNumber}`, 40 + ((frameNumber * 5) % 600), height / 2);
+    }
+
+    function drawNextFrame() {
+      frameNumber += 1;
+      if (animationKind === 'noise') drawNoise();
+      else drawGameLikeScene();
+      requestAnimationFrame(drawNextFrame);
+    }
+
+    drawNextFrame();
+  </script>
+</body>
+</html>

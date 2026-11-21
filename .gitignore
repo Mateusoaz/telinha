@@ -1,0 +1,7 @@
+node_modules/
+dist/
+release/
+resources/bin/
+native/audiocap/bin/
+native/audiocap/obj/
+dev-app-update.yml
